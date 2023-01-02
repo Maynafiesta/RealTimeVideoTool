@@ -23,7 +23,7 @@ video_encode::video_encode(codecs codec_obj,
                            const char* crf_val_param,
                            const char* crf_preset_param) {
 
-    folder_path = "../VideoClips/";
+    folder_path = "VideoClips/";
     file_name = "video_";
     codec_val = codec_obj;
     frame_width = *frame_width_param;

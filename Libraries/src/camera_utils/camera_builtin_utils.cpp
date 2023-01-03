@@ -86,7 +86,7 @@ size_t camera_builtin_utils::check_resolution_fps() {
         this->cap.set(cv::CAP_PROP_FRAME_WIDTH, this->frame_width);
         double reseted_frame_width = this->cap.get(cv::CAP_PROP_FRAME_WIDTH);
         if (reseted_frame_width != this->frame_width) {
-            std::cerr << "Frame width can not be changed to " << (unsigned)this->frame_width <<
+            std::cerr << "Frame width can not be changed to " << (unsigned) this->frame_width <<
                       ". Current width " << reseted_frame_width << "\n";
             resize_success_flag = true;
         }
@@ -97,7 +97,7 @@ size_t camera_builtin_utils::check_resolution_fps() {
         this->cap.set(cv::CAP_PROP_FRAME_HEIGHT, this->frame_height);
         double reseted_frame_height = this->cap.get(cv::CAP_PROP_FRAME_HEIGHT);
         if (reseted_frame_height != this->frame_height) {
-            std::cerr << "Frame height can not be changed to " << (unsigned)this->frame_height <<
+            std::cerr << "Frame height can not be changed to " << (unsigned) this->frame_height <<
                       ". Current height " << reseted_frame_height << "\n";
             resize_success_flag = true;
         }
@@ -108,7 +108,7 @@ size_t camera_builtin_utils::check_resolution_fps() {
         this->cap.set(cv::CAP_PROP_FPS, this->frame_rate);
         double reseted_fps = this->cap.get(cv::CAP_PROP_FPS);
         if (reseted_fps != this->frame_rate) {
-            std::cerr << "FPS can not be changed to " << (unsigned)this->frame_rate <<
+            std::cerr << "FPS can not be changed to " << (unsigned) this->frame_rate <<
                       ". Current FPS " << reseted_fps << "\n";
             resize_success_flag = true;
         }
@@ -119,7 +119,7 @@ size_t camera_builtin_utils::check_resolution_fps() {
 uint16_t camera_builtin_utils::get_camera_frame_height() {
 //    this->frame_height = (uint8_t) this->cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 //    return this->frame_height;
-return (uint8_t) this->cap.get(cv::CAP_PROP_FRAME_HEIGHT);
+    return (uint8_t) this->cap.get(cv::CAP_PROP_FRAME_HEIGHT);
 }
 
 uint16_t camera_builtin_utils::get_camera_frame_width() {

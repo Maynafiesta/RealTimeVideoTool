@@ -1,7 +1,3 @@
-//
-// Created by taric on 16.08.2022.
-//
-
 #include "video_convert.h"
 
 /**

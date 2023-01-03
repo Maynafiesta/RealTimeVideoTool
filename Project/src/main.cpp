@@ -7,6 +7,7 @@
 #ifdef REALSENSE_SDK_SMIR
 #include "camera_realsense_utils.h"
 #endif
+
 extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>

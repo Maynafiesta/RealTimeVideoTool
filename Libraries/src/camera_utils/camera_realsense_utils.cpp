@@ -1,7 +1,3 @@
-//
-// Created by taric on 16.08.2022.
-//
-
 #include "camera_realsense_utils.h"
 
 using namespace cv;

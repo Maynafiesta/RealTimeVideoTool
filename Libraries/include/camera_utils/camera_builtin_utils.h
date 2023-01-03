@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_STREAM_ENCODE_CAMERA_BUILTIN_UTILS_H
-#define FFMPEG_VIDEO_STREAM_ENCODE_CAMERA_BUILTIN_UTILS_H
+#ifndef SMIRVIDEOTOOL_CAMERA_BUILTIN_UTILS_H
+#define SMIRVIDEOTOOL_CAMERA_BUILTIN_UTILS_H
 
 #include <opencv4/opencv2/opencv.hpp>
 #include <iostream>
@@ -25,8 +25,11 @@ public:
     void stop_camera_stream();
 
     size_t get_rgb_frame(cv::Mat *dest);
+
     uint16_t get_camera_frame_width();
+
     uint16_t get_camera_frame_height();
+
     uint8_t get_camera_frame_rate();
 
     size_t set_video_capture();
@@ -43,4 +46,4 @@ public:
     Video_Sources video_source;
 };
 
-#endif //FFMPEG_VIDEO_STREAM_ENCODE_CAMERA_BUILTIN_UTILS_H
+#endif //SMIRVIDEOTOOL_CAMERA_BUILTIN_UTILS_H

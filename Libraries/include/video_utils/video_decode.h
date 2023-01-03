@@ -1,5 +1,5 @@
-#ifndef FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_DECODE_H
-#define FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_DECODE_H
+#ifndef SMIRVIDEOTOOL_VIDEO_DECODE_H
+#define SMIRVIDEOTOOL_VIDEO_DECODE_H
 
 #include <iostream>
 #include <string>
@@ -18,6 +18,7 @@ public:
     static void pgm_save(unsigned char *buf, int wrap, int xsize, int ysize, char *filename);
 
     static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, const char *filename);
+
 private:
     const AVCodec *codec;
     const char *filename, *out_filename;
@@ -28,5 +29,4 @@ private:
     AVPacket *pkt;
 };
 
-
-#endif //FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_DECODE_H
+#endif //SMIRVIDEOTOOL_VIDEO_DECODE_H

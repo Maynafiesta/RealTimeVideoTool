@@ -18,7 +18,7 @@ void video_decode::pgm_save(unsigned char *buf, int wrap, int xsize, int ysize, 
 }
 
 void video_decode::decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt,
-                   const char *filename) {
+                          const char *filename) {
     char buf[1024];
     int ret;
     ret = avcodec_send_packet(dec_ctx, pkt);

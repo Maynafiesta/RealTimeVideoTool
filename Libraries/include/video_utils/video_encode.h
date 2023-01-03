@@ -1,9 +1,5 @@
-//
-// Created by taric on 16.08.2022.
-//
-
-#ifndef FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_ENCODE_H
-#define FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_ENCODE_H
+#ifndef SMIRVIDEOTOOL_VIDEO_ENCODE_H
+#define SMIRVIDEOTOOL_VIDEO_ENCODE_H
 
 #define USER_DATA_START_CODE    0x000001b2
 #define SEQUENCE_HEADER_CODE    0x000001b3
@@ -97,8 +93,6 @@ private:
     AVCodecContext *codec_ctx_obj;
     AVPacket *packet_obj;
     AVCodecID codec_id_obj;
-
 };
 
-
-#endif //FFMPEG_VIDEO_STREAM_ENCODE_VIDEO_ENCODE_H
+#endif //SMIRVIDEOTOOL_VIDEO_ENCODE_H

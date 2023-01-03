@@ -1,12 +1,6 @@
-//
-// Created by taric on 16.08.2022.
-//
-
 #include "video_encode.h"
 #include <iostream>
 #include <sys/stat.h>
-
-//#define DEBUG_FLAG
 
 static const char *const mpeg_extention = ".mp4";
 static const char *const h264_extention = ".mkv";
@@ -20,8 +14,8 @@ video_encode::video_encode(codecs codec_obj,
                            const uint16_t *frame_height_param,
                            const uint8_t *frame_buffer_size_param,
                            const uint8_t *frame_rate_param,
-                           const char* crf_val_param,
-                           const char* crf_preset_param) {
+                           const char *crf_val_param,
+                           const char *crf_preset_param) {
 
     folder_path = "VideoClips/";
     file_name = "video_";
@@ -33,8 +27,8 @@ video_encode::video_encode(codecs codec_obj,
     file_counter = 0;
     file_obj_status = false;
     frame_obj = frame_obj_param;
-    crf_val_char = (char*)crf_val_param;
-    crf_preset_val = (uint8_t)strtol(crf_preset_param, nullptr, 10);
+    crf_val_char = (char *) crf_val_param;
+    crf_preset_val = (uint8_t) strtol(crf_preset_param, nullptr, 10);
 
     set_video_extension(codec_obj);
     set_avcontext();
@@ -44,9 +38,9 @@ video_encode::video_encode(codecs codec_obj,
 
 void video_encode::encode(AVFrame *frame_param) {
 
-#ifdef DEBUG_FLAG
-    printf("Send frame %3" PRId64 "\n", (*frame_obj)->pts);
-#endif
+
+//    printf("Send frame %3" PRId64 "\n", (*frame_obj)->pts);
+
 
     int ret = avcodec_send_frame(codec_ctx_obj, frame_param);
     if (AVERROR(EAGAIN) == ret || AVERROR_EOF == ret)
@@ -64,9 +58,8 @@ void video_encode::encode(AVFrame *frame_param) {
             exit(EXIT_FAILURE);
         }
 
-#ifdef DEBUG_FLAG
-        printf("Write packet %3" PRId64" (size=%5d)\n", (packet_obj)->pts, (packet_obj)->size);
-#endif
+//        printf("Write packet %3" PRId64" (size=%5d)\n", (packet_obj)->pts, (packet_obj)->size);
+
         fwrite(packet_obj->data, 1, packet_obj->size, file_obj);
         av_packet_unref(packet_obj);
     }
@@ -164,7 +157,7 @@ void video_encode::create_file_object() {
         std::cerr << "Could not open. Trying to create related top folder! " << full_file_path << "\n";
         int ret = mkdir(folder_path, 0777);
         if (ret) {
-            std::cerr << "Error : " << strerror(errno) <<  " - Finally folder could not created!\n";
+            std::cerr << "Error : " << strerror(errno) << " - Finally folder could not created!\n";
             exit(EXIT_FAILURE);
         }
         file_obj = fopen(full_file_path, "wb");

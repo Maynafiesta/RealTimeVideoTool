@@ -7,6 +7,6 @@ typedef enum {
     CAM_EMPTY_FRAME_ERROR = 101,
     CAM_CAP_NOT_OPENED_ERROR = 102,
     CAM_CAP_WRONG_FPS_RES_ERROR = 103,
-}Camera_Error_Types;
+} Camera_Error_Types;
 
 #endif //SMIRVIDEOTOOL_CAMERA_ERRORS_H

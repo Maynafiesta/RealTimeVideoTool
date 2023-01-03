@@ -1,10 +1,11 @@
 find_package(OpenCV REQUIRED)
-find_package(realsense2 REQUIRED)
+if (REALSENSE_SDK)
+    find_package(realsense2 REQUIRED)
+endif (REALSENSE_SDK)
 
 include_directories(../../include/video_utils)
 
 add_library(video_utils video_encode.cpp video_decode.cpp video_convert.cpp)
-
 
 target_link_libraries(video_utils avcodec)
 target_link_libraries(video_utils avutil)
@@ -27,4 +28,7 @@ target_link_libraries(video_utils lzma)
 target_link_libraries(video_utils opencv_videoio)
 target_link_libraries(video_utils opencv_core)
 target_link_libraries(video_utils ${OpenCV_LIBS})
-target_link_libraries(video_utils  ${realsense2_LIBRARY})
+
+if (REALSENSE_SDK)
+    target_link_libraries(video_utils ${realsense2_LIBRARY})
+endif (REALSENSE_SDK)

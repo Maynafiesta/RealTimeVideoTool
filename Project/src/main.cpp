@@ -2,9 +2,11 @@
 #include <opencv2/opencv.hpp>
 #include "video_convert.h"
 #include "video_encode.h"
-#include "camera_realsense_utils.h"
 #include "camera_builtin_utils.h"
 
+#ifdef REALSENSE_SDK_SMIR
+#include "camera_realsense_utils.h"
+#endif
 extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/imgutils.h>
@@ -27,7 +29,7 @@ void print_usage(char *cmd) {
            " -h (--help)            Display this help and exit\n"
            " -cs x (--cameraselect) Camera select\n"
            "                            1 : Builtin [default]\n"
-           "                            2 : Realsense\n"
+           "                            2 : Realsense -> Requires compile configuration. See README.md\n"
            "                            3 : Logitech\n"
            "                            4 : From File + [Address]\n"
            " -p x (--port)          Select port number\n"
@@ -86,8 +88,8 @@ int main(int argc, char *argv[]) {
         } else if (((0 == strcmp(argv[i], "-p")) || (0 == strcmp(argv[i], "--port"))) && (i + 1 != argc)) {
 
             if (video_path_given) {
-                std::cerr
-                        << "Both Video Path and Port Num given. Decide Video Path or camera device with related Port Num!\n";
+                std::cerr << "Both Video Path and Port Num given. "
+                             "Decide Video Path or Camera Device with related Port Num!\n";
                 exit(EXIT_FAILURE);
             }
             port_num = (uint8_t) strtol(argv[i + 1], nullptr, 10);
@@ -122,6 +124,12 @@ int main(int argc, char *argv[]) {
 
                 case 2:
                     camera_select = cameras::REALSENSE;
+#ifndef REALSENSE_SDK_SMIR
+                    std::cerr << "Project is not compiled with Realsense support! Check README.md.\n"
+                                 "If you just want to get image through OpenCV use -p with related port num.\n"
+                                 "This option requires access to Realsense SDK.\n";
+                    exit(EXIT_FAILURE);
+#endif
                     i++;
                     break;
 
@@ -219,28 +227,30 @@ int main(int argc, char *argv[]) {
         delete camera_obj;
         delete encode_obj;
         exit(EXIT_SUCCESS);
-    } else if (cameras::REALSENSE == camera_select) {
-        auto camera_obj = new camera_realsense_utils(&frame_width,
-                                                     &frame_height,
-                                                     &fps);
-        uint16_t count = 0;
-        Mat color_image;
-        while (count++ < buffer_size) {
-            fflush(stdout);
-            camera_obj->get_rgb_frame(&color_image);
-            encode_obj->make_writable();
-            cvmat_to_avframe_0(&color_image, &frame);
-            cv::imshow("Realsense Video", color_image);
-            waitKey(25);
-            frame->pts = count;
-            encode_obj->encode(frame);
-        }
-        /* flush the encoder */
-        encode_obj->encode(nullptr);
-        encode_obj->release_ffmpeg_tool();
-        camera_obj->stop_camera_stream();
-        delete camera_obj;
-        delete encode_obj;
-        return 0;
+#ifdef REALSENSE_SDK_SMIR
+        } else if (cameras::REALSENSE == camera_select) {
+            auto camera_obj = new camera_realsense_utils(&frame_width,
+                                                         &frame_height,
+                                                         &fps);
+            uint16_t count = 0;
+            Mat color_image;
+            while (count++ < buffer_size) {
+                fflush(stdout);
+                camera_obj->get_rgb_frame(&color_image);
+                encode_obj->make_writable();
+                cvmat_to_avframe_0(&color_image, &frame);
+                cv::imshow("Realsense Video", color_image);
+                waitKey(25);
+                frame->pts = count;
+                encode_obj->encode(frame);
+            }
+            /* flush the encoder */
+            encode_obj->encode(nullptr);
+            encode_obj->release_ffmpeg_tool();
+            camera_obj->stop_camera_stream();
+            delete camera_obj;
+            delete encode_obj;
+            return 0;
+#endif // REALSENSE_SDK_SMIR
     }
 }

@@ -2,27 +2,25 @@
 #include <iostream>
 #include <sys/stat.h>
 
+#define MAX_FILE_NUMBER 20
+
 static const char *const mpeg_extention = ".mp4";
 static const char *const h264_extention = ".mkv";
-
-uint8_t endcode[] = {0, 0, 1, 0xb7};
-uint8_t headcode[] = {0, 0, 1, 0xb3};
 
 video_encode::video_encode(codecs codec_obj,
                            AVFrame **frame_obj_param,
                            const uint16_t *frame_width_param,
                            const uint16_t *frame_height_param,
-                           const uint8_t *frame_buffer_size_param,
                            const uint8_t *frame_rate_param,
                            const char *crf_val_param,
                            const char *crf_preset_param) {
 
     folder_path = "VideoClips/";
     file_name = "video_";
+    file_extension = "";
     codec_val = codec_obj;
     frame_width = *frame_width_param;
     frame_height = *frame_height_param;
-    buffer_size = *frame_buffer_size_param;
     fps = *frame_rate_param;
     file_counter = 0;
     file_obj_status = false;
@@ -33,15 +31,11 @@ video_encode::video_encode(codecs codec_obj,
     set_video_extension(codec_obj);
     set_avcontext();
     set_avframe();
-    create_file_object();
 }
 
 void video_encode::encode(AVFrame *frame_param) {
 
-
 //    printf("Send frame %3" PRId64 "\n", (*frame_obj)->pts);
-
-
     int ret = avcodec_send_frame(codec_ctx_obj, frame_param);
     if (AVERROR(EAGAIN) == ret || AVERROR_EOF == ret)
         std::cerr << "Error sending a frame for encoding!\n";
@@ -59,7 +53,6 @@ void video_encode::encode(AVFrame *frame_param) {
         }
 
 //        printf("Write packet %3" PRId64" (size=%5d)\n", (packet_obj)->pts, (packet_obj)->size);
-
         fwrite(packet_obj->data, 1, packet_obj->size, file_obj);
         av_packet_unref(packet_obj);
     }
@@ -118,8 +111,8 @@ void video_encode::set_avcontext() {
     }
 
     if (codec->id == AV_CODEC_ID_H264) {
-        std::cout << "crf val : " << crf_val_char << "\n";
-        std::cout << "crf preset : " << crf_preset_list[crf_preset_val] << "\n";
+        std::cout << "@Encoder\t:\tcrf val\t:\t" << crf_val_char << "\n";
+        std::cout << "@Encoder\t:\tcrf pre\t:\t" << crf_preset_list[crf_preset_val] << "\n";
         av_opt_set(codec_ctx_obj->priv_data, "preset", crf_preset_list[crf_preset_val], 0);
         av_opt_set(codec_ctx_obj->priv_data, "crf", crf_val_char, 0);
     }
@@ -139,9 +132,6 @@ void video_encode::set_avcontext() {
     }
 }
 
-void video_encode::release_video_data() {
-}
-
 void video_encode::release_ffmpeg_tool() {
     fclose(file_obj);
     file_obj_status = false;
@@ -150,39 +140,47 @@ void video_encode::release_ffmpeg_tool() {
     av_packet_free(&packet_obj);
 }
 
-void video_encode::create_file_object() {
-    update_full_path_name();
-    file_obj = fopen(full_file_path, "wb");
-    if (!file_obj | file_obj_status) {
-        std::cerr << "Could not open. Trying to create related top folder! " << full_file_path << "\n";
-        int ret = mkdir(folder_path, 0777);
-        if (ret) {
-            std::cerr << "Error : " << strerror(errno) << " - Finally folder could not created!\n";
-            exit(EXIT_FAILURE);
-        }
-        file_obj = fopen(full_file_path, "wb");
+size_t video_encode::create_file_object() {
+    if (file_obj_status) {
+        std::cerr << "@Encoder\t:\tAnother FILE* object is already created. "
+                     "To avoid leakage and data loss, please first release it!\n";
+        return FILE_ALREADY_OPEN;
+    }
+    short local_file_counter_increment = 0;
+    static char file_open_mode[] = "wx";
+
+    int ret = mkdir(folder_path, 0777);
+    if (ret && EEXIST != errno) {
+        std::cerr << "@Encoder\t:\tError str\t:\t" << strerror(errno) << "\n";
+        std::cerr << "@Encoder\t:\tCreation of related top folder \t:\t[" << folder_path << "] is failed\n";
+        exit(EXIT_FAILURE);
+    }
+    bool file_exists_warning_writen_flag = false;
+    while (local_file_counter_increment < MAX_FILE_NUMBER) {
+        update_full_path_name();
+
+        file_obj = fopen(full_file_path, file_open_mode);
         if (!file_obj) {
-            std::cerr << "Creating folder did not solve the problem!\n";
-            exit(EXIT_FAILURE);
+            // Note to myself, if file not created, no need to call fclose().
+            if (EEXIST == errno) {
+                if (!file_exists_warning_writen_flag) {
+                    std::cerr << "@Encoder\t:\tFile exists, retrying creating file!\n";
+                    file_exists_warning_writen_flag = true;
+                }
+                local_file_counter_increment++;
+                continue;
+            }
+            std::cerr << "@Encoder\t:\tFailed to create file!\n"
+                      << "@Encoder\t:\tError desc.\t:\t[" << strerror(errno) << "]\n";
+            return FILE_COULD_NOT_OPEN;
         }
+        std::cout << "@Encoder\t:\tFile created\t:\t[" << full_file_path << "]\n";
+        file_obj_status = true;
+        return SUCCESS_VAL;  // Successfully file created.
     }
-    file_obj_status = true;
-}
-
-void video_encode::add_head_code() {
-    if (!file_obj_status) {
-        std::cerr << stderr << "Can not open file!\n";
-        exit(EXIT_FAILURE);
-    }
-    fwrite(headcode, 1, sizeof(headcode), file_obj);
-}
-
-void video_encode::add_end_code() {
-    if (!file_obj_status) {
-        std::cerr << stderr << "Can not open file!\n";
-        exit(EXIT_FAILURE);
-    }
-    fwrite(endcode, 1, sizeof(endcode), file_obj);
+    std::cerr << "@Encoder\t:\tMaximum file counter ["
+              << local_file_counter_increment << "] achieved. Handle storage issue first!\n";
+    return MAX_FILE_COUNTER_ACHIEVED;
 }
 
 void video_encode::make_writable() {
@@ -197,12 +195,12 @@ void video_encode::update_full_path_name() {
     char file_counter_char[10];
     strcpy(full_file_path, folder_path);
     strcat(full_file_path, file_name);
-//    sprintf(file_counter_char, "%d", file_counter);
-//    strcat(full_file_path, file_counter_char);
     strcat(full_file_path, "Crf");
     strcat(full_file_path, crf_val_char);
-    strcat(full_file_path, file_extension);
     file_counter += 1;
+    sprintf(file_counter_char, "_%d", file_counter);
+    strcat(full_file_path, file_counter_char);
+    strcat(full_file_path, file_extension);
 }
 
 void video_encode::set_video_extension(codecs codec_obj) {

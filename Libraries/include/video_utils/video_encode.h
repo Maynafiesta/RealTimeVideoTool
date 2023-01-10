@@ -1,12 +1,6 @@
 #ifndef SMIRVIDEOTOOL_VIDEO_ENCODE_H
 #define SMIRVIDEOTOOL_VIDEO_ENCODE_H
 
-#define USER_DATA_START_CODE    0x000001b2
-#define SEQUENCE_HEADER_CODE    0x000001b3
-//#define SEQUENCE_HEADER_CODE    {0, 0, 1, 0xb3}
-#define SEQUENCE_ERROR_CODE     0x000001b4
-#define SEQUENCE_END_CODE       0x000001b7
-
 #include <cstring>
 #include <vector>
 #include <cstdio>
@@ -41,7 +35,6 @@ public:
                  AVFrame **frame_obj_param,
                  const uint16_t *frame_width_param,
                  const uint16_t *frame_height_param,
-                 const uint8_t *frame_buffer_size_param,
                  const uint8_t *frame_rate_param,
                  const char *crf_val_param,
                  const char *crf_preset_param);
@@ -58,13 +51,7 @@ public:
 
     void set_avframe();
 
-    void add_head_code();
-
-    void add_end_code();
-
-    void create_file_object();
-
-    void release_video_data();
+    size_t create_file_object();
 
     void release_ffmpeg_tool();
 
@@ -72,11 +59,17 @@ public:
 
     void frame_alloc();
 
+    /*
+     * MPEG desteği ve container dosya sekli icin bu yapilar eklenebilir.
+    void add_head_code();
+    void add_end_code();
+     */
+
 private:
     const char *folder_path;
     const char *file_name;
     const char *file_extension;
-    char full_file_path[50];
+    char full_file_path[50] = {};
     char *crf_val_char;
     uint8_t crf_preset_val;
     codecs codec_val;
@@ -84,15 +77,13 @@ private:
     uint16_t frame_width;
     uint16_t frame_height;
     uint8_t fps;
-    uint8_t buffer_size;
-    uint16_t frame_counter;
-    FILE *file_obj;
+    FILE *file_obj = nullptr;
     bool file_obj_status;
-    const AVCodec *codec;
+    AVCodec *codec = nullptr;
     AVFrame **frame_obj;
-    AVCodecContext *codec_ctx_obj;
-    AVPacket *packet_obj;
-    AVCodecID codec_id_obj;
+    AVCodecContext *codec_ctx_obj = nullptr;
+    AVPacket *packet_obj = nullptr;
+    AVCodecID codec_id_obj = AV_CODEC_ID_H264;
 };
 
 #endif //SMIRVIDEOTOOL_VIDEO_ENCODE_H

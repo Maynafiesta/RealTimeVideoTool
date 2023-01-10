@@ -4,17 +4,9 @@
 #include "video_encode.h"
 #include "camera_builtin_utils.h"
 
-#ifdef REALSENSE_SDK_SMIR
-#include "camera_realsense_utils.h"
-#endif
-
 extern "C" {
-#include <libavutil/opt.h>
-#include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 }
-
-#define DEFAULT_VIDEO_PATH "~/HRSampleVideos/3resting.avi_1.mp4"
 
 enum cameras {
     BUILT_IN = 1,
@@ -62,17 +54,13 @@ int main(int argc, char *argv[]) {
     char crf_preset_char[5] = "5";
     char crf_val_char[3] = "8";
 
-    unsigned long total_frames_encoded = 0;
-//    const uint16_t frame_width = 1920;
-//    const uint16_t frame_height = 1080;
     const uint16_t frame_width = 640;
     const uint16_t frame_height = 480;
-    const uint8_t fps = 30;
+    const uint8_t frame_rate = 30;
 
     uint8_t port_num = 0;
     static char video_source_addr[200] = {};
 
-    const uint8_t buffer_size = 15;
     cameras camera_select = cameras::BUILT_IN;
     Video_Sources video_source = Video_Sources::BUILT_IN_CAMERA;
 
@@ -173,85 +161,75 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    auto encode_obj = new video_encode(codec_select,
-                                       &frame,
-                                       &frame_width,
-                                       &frame_height,
-                                       &buffer_size,
-                                       &fps,
-                                       crf_val_char,
-                                       crf_preset_char);
-
     if (cameras::BUILT_IN == camera_select || cameras::FROM_FILE == camera_select) {
+
         auto camera_obj = new camera_builtin_utils(&frame_width,
                                                    &frame_height,
-                                                   &fps,
+                                                   &frame_rate,
                                                    &port_num,
                                                    video_source_addr,
                                                    video_source);
 
         ret = camera_obj->set_video_capture();
-        if (SUCCESS_VAL != ret) {
+        if (ret) {
             if (CAP_NOT_OPENED_ERROR == ret) {
                 exit(EXIT_FAILURE);
+            } else if (CAM_CAP_WRONG_FPS_RES_ERROR == ret) {
+                std::cerr << "@Main\t\t:\tCamera opened but resolution or fps is not as you wish!\n";
             }
-            // Here represents the capture opened but with wrong resolution or fps.
         }
+
+        auto encode_obj = new video_encode(codec_select,
+                                           &frame,
+                                           &frame_width,
+                                           &frame_height,
+                                           &frame_rate,
+                                           crf_val_char,
+                                           crf_preset_char);
+
+        ret = encode_obj->create_file_object();
+        if (ret) {
+            std::cerr << "@Main\t\t:\tCould not create file object!\n";
+            exit(EXIT_FAILURE);
+        }
+
         uint16_t count = 0;
         Mat color_image;
+
+        std::chrono::steady_clock::time_point time_start = std::chrono::steady_clock::now();
 
         while (count < total_frame) {
 
             fflush(stdout);
             ret = camera_obj->get_rgb_frame(&color_image);
             if (ret) {
-                total_frames_encoded = count;
-                std::cout << "Total processed frame: " << (unsigned) total_frames_encoded << "\n";
                 break;
             }
             encode_obj->make_writable();
             cvmat_to_avframe_0(&color_image, &frame);
-
             frame->pts = count;
             encode_obj->encode(frame);
             count++;
 
             cv::imshow("Video", color_image);
-            if (27 == cv::waitKey(27))
+            if (27 == cv::waitKey(1))
                 break;
         }
 
         /* flush the encoder */
         encode_obj->encode(nullptr);
+        std::cout << "@Main\t\t:\tTotal processed frame\t:\t[" << (unsigned) count << "]\n";
+
+        std::chrono::steady_clock::time_point time_end = std::chrono::steady_clock::now();
+        long time_diff = std::chrono::duration_cast<std::chrono::seconds>(time_end - time_start).count();
+
+        std::cout << "@Main\t\t:\tTotal time \t:\t[" << time_diff << "] secs.\n";
+
         encode_obj->release_ffmpeg_tool();
         camera_obj->stop_camera_stream();
         delete camera_obj;
         delete encode_obj;
         exit(EXIT_SUCCESS);
-#ifdef REALSENSE_SDK_SMIR
-        } else if (cameras::REALSENSE == camera_select) {
-            auto camera_obj = new camera_realsense_utils(&frame_width,
-                                                         &frame_height,
-                                                         &fps);
-            uint16_t count = 0;
-            Mat color_image;
-            while (count++ < buffer_size) {
-                fflush(stdout);
-                camera_obj->get_rgb_frame(&color_image);
-                encode_obj->make_writable();
-                cvmat_to_avframe_0(&color_image, &frame);
-                cv::imshow("Realsense Video", color_image);
-                waitKey(25);
-                frame->pts = count;
-                encode_obj->encode(frame);
-            }
-            /* flush the encoder */
-            encode_obj->encode(nullptr);
-            encode_obj->release_ffmpeg_tool();
-            camera_obj->stop_camera_stream();
-            delete camera_obj;
-            delete encode_obj;
-            return 0;
-#endif // REALSENSE_SDK_SMIR
+
     }
 }

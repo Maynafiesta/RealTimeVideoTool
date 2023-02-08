@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sys/stat.h>
 
-#define MAX_FILE_NUMBER 20
+#define MAX_FILE_NUMBER 400
 
 static const char *const mpeg_extention = ".mp4";
 static const char *const h264_extention = ".mkv";
@@ -13,10 +13,12 @@ video_encode::video_encode(codecs codec_obj,
                            const uint16_t *frame_height_param,
                            const uint8_t *frame_rate_param,
                            const char *crf_val_param,
-                           const char *crf_preset_param) {
+                           const char *crf_preset_param,
+                           const char *file_name_param) {
 
     folder_path = "VideoClips/";
-    file_name = "video_";
+    file_name = (char*)file_name_param;
+//    strcpy(this->file_name, file_name_param);
     file_extension = "";
     codec_val = codec_obj;
     frame_width = *frame_width_param;
@@ -178,6 +180,7 @@ size_t video_encode::create_file_object() {
         file_obj_status = true;
         return SUCCESS_VAL;  // Successfully file created.
     }
+
     std::cerr << "@Encoder\t:\tMaximum file counter ["
               << local_file_counter_increment << "] achieved. Handle storage issue first!\n";
     return MAX_FILE_COUNTER_ACHIEVED;
@@ -193,10 +196,14 @@ void video_encode::make_writable() {
 
 void video_encode::update_full_path_name() {
     char file_counter_char[10];
+    char file_fps_char[10];
     strcpy(full_file_path, folder_path);
     strcat(full_file_path, file_name);
-    strcat(full_file_path, "Crf");
+    strcat(full_file_path, "_Crf_");
     strcat(full_file_path, crf_val_char);
+    strcat(full_file_path, "Fps_");
+    sprintf(file_fps_char, "%d", fps);
+    strcat(full_file_path, file_fps_char);
     file_counter += 1;
     sprintf(file_counter_char, "_%d", file_counter);
     strcat(full_file_path, file_counter_char);

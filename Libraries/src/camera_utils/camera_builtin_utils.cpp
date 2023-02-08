@@ -16,7 +16,6 @@ camera_builtin_utils::camera_builtin_utils(const uint16_t *frame_width_param,
     this->frame_height = *frame_height_param;
     this->frame_width = *frame_width_param;
     this->frame_rate = *fps_param;
-
 }
 
 camera_builtin_utils::~camera_builtin_utils() = default;
@@ -36,6 +35,8 @@ size_t camera_builtin_utils::set_video_capture() {
             break;
     }
 
+    this->cap.set(cv::CAP_PROP_AUTO_EXPOSURE, 1);
+    this->cap.set(cv::CAP_PROP_FPS, this->frame_rate);
     if (!this->cap.isOpened()) {
         std::cerr << "Can not Open Video Capture!\n";
         return CAM_CAP_NOT_OPENED_ERROR;
@@ -49,6 +50,7 @@ size_t camera_builtin_utils::set_video_capture() {
 
 void camera_builtin_utils::stop_camera_stream() {
     this->camera_work_flag = false;
+    this->cap.release();
 }
 
 /**
@@ -102,7 +104,6 @@ size_t camera_builtin_utils::check_resolution_fps() {
             resize_failure_flag = true;
         }
     }
-
     if (current_fps != this->frame_rate) {
         std::cerr << "FPS will be changed.\n";
         this->cap.set(cv::CAP_PROP_FPS, this->frame_rate);

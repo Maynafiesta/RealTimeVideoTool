@@ -37,7 +37,8 @@ public:
                  const uint16_t *frame_height_param,
                  const uint8_t *frame_rate_param,
                  const char *crf_val_param,
-                 const char *crf_preset_param);
+                 const char *crf_preset_param,
+                 const char *file_name_param);
 
     ~video_encode();
 
@@ -59,6 +60,8 @@ public:
 
     void frame_alloc();
 
+    uint16_t file_counter;
+
     /*
      * MPEG desteği ve container dosya sekli icin bu yapilar eklenebilir.
     void add_head_code();
@@ -67,13 +70,12 @@ public:
 
 private:
     const char *folder_path;
-    const char *file_name;
     const char *file_extension;
+    char *file_name;
     char full_file_path[50] = {};
     char *crf_val_char;
     uint8_t crf_preset_val;
     codecs codec_val;
-    uint16_t file_counter;
     uint16_t frame_width;
     uint16_t frame_height;
     uint8_t fps;

@@ -6,4 +6,4 @@ cd cmake-build-debug-my || exit
 cmake .. -DCMAKE_BUILD_TYPE=Debug . 
 make -j "$(nproc)"
 cd .. || exit
-./cmake-build-debug-my/smirVideoTool
+./cmake-build-debug-my/smirDrivingSafety

@@ -16,7 +16,6 @@ camera_builtin_utils::camera_builtin_utils(const uint16_t *frame_width_param,
     this->frame_height = *frame_height_param;
     this->frame_width = *frame_width_param;
     this->frame_rate = *fps_param;
-
 }
 
 camera_builtin_utils::~camera_builtin_utils() = default;

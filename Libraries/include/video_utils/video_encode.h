@@ -48,7 +48,8 @@ public:
                  const uint8_t *frame_buffer_size_param,
                  const uint8_t *frame_rate_param,
                  const char *crf_val_param,
-                 const char *crf_preset_param);
+                 const char *crf_preset_param,
+                 const char* output_file_name_param);
 
     ~video_encode();
 
@@ -81,6 +82,8 @@ private:
     const char *file_name;
     const char *file_extension;
     char full_file_path[50];
+    char temp_output_file_name[50];
+    char *output_file_name_addr;
     char *crf_val_char;
     uint8_t crf_preset_val;
     codecs codec_val;

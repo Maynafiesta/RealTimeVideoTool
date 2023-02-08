@@ -20,10 +20,22 @@ video_encode::video_encode(codecs codec_obj,
                            const uint16_t *frame_height_param,
                            const uint8_t *frame_buffer_size_param,
                            const uint8_t *frame_rate_param,
-                           const char* crf_val_param,
-                           const char* crf_preset_param) {
+                           const char *crf_val_param,
+                           const char *crf_preset_param,
+                           const char *output_file_name_param) {
 
     folder_path = "VideoClips/";
+
+    int ret = mkdir(folder_path, 0777);
+    if (-1 == ret) {
+        if (EEXIST == errno) {
+            // Folder already exist.
+        } else {
+            std::cerr << "Error : " << " - " << strerror(errno) << " - Folder could not created!\n";
+            exit(EXIT_FAILURE);
+        }
+    }
+
     file_name = "video_";
     codec_val = codec_obj;
     frame_width = *frame_width_param;
@@ -33,9 +45,9 @@ video_encode::video_encode(codecs codec_obj,
     file_counter = 0;
     file_obj_status = false;
     frame_obj = frame_obj_param;
-    crf_val_char = (char*)crf_val_param;
-    crf_preset_val = (uint8_t)strtol(crf_preset_param, nullptr, 10);
-
+    crf_val_char = (char *) crf_val_param;
+    crf_preset_val = (uint8_t) strtol(crf_preset_param, nullptr, 10);
+    output_file_name_addr = (char *) output_file_name_param;
     set_video_extension(codec_obj);
     set_avcontext();
     set_avframe();
@@ -125,8 +137,8 @@ void video_encode::set_avcontext() {
     }
 
     if (codec->id == AV_CODEC_ID_H264) {
-        std::cout << "crf val : " << crf_val_char << "\n";
-        std::cout << "crf preset : " << crf_preset_list[crf_preset_val] << "\n";
+        std::cout << "@Encode\t:\tCRF Val\t:" << crf_val_char << "\t-\tCRF Preset\t:\t"
+                  << crf_preset_list[crf_preset_val] << "\n";
         av_opt_set(codec_ctx_obj->priv_data, "preset", crf_preset_list[crf_preset_val], 0);
         av_opt_set(codec_ctx_obj->priv_data, "crf", crf_val_char, 0);
     }
@@ -164,7 +176,7 @@ void video_encode::create_file_object() {
         std::cerr << "Could not open. Trying to create related top folder! " << full_file_path << "\n";
         int ret = mkdir(folder_path, 0777);
         if (ret) {
-            std::cerr << "Error : " << strerror(errno) <<  " - Finally folder could not created!\n";
+            std::cerr << "Error : " << strerror(errno) << " - Finally folder could not created!\n";
             exit(EXIT_FAILURE);
         }
         file_obj = fopen(full_file_path, "wb");
@@ -201,14 +213,20 @@ void video_encode::make_writable() {
 }
 
 void video_encode::update_full_path_name() {
-    char file_counter_char[10];
+    strcpy(temp_output_file_name, output_file_name_addr);
+    char *video_extension_in_file_name = strstr(temp_output_file_name, ".");
+    if (!video_extension_in_file_name) {
+        std::cerr << "Could not parse video extension in file name!\n";
+        exit(EXIT_FAILURE);
+    }
+//    std::cout << "@Encoder : Source video extension : " << video_extension_in_file_name << "\n";
+    strcpy(video_extension_in_file_name, "_Crf");
+//    std::cout << "@Encoder : Destination video extension : " << this->file_extension << "\n";
     strcpy(full_file_path, folder_path);
-    strcat(full_file_path, file_name);
-//    sprintf(file_counter_char, "%d", file_counter);
-//    strcat(full_file_path, file_counter_char);
-    strcat(full_file_path, "Crf");
+    strcat(full_file_path, temp_output_file_name);
     strcat(full_file_path, crf_val_char);
     strcat(full_file_path, file_extension);
+    std::cout << "@Encoder : Final path to output : " << full_file_path << "\n";
     file_counter += 1;
 }
 
